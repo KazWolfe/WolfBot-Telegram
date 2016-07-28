@@ -1,0 +1,8 @@
+{
+    "apikey": "YourTelegramAPIKey",
+    "superusers": [
+        "YourTelegramID",
+	"YourTelegramID2"
+    ],
+    "version": "BotConfigVersion"
+}
