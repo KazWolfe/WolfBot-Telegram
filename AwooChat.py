@@ -29,84 +29,76 @@ def titleWatchdog(msg):
         for i in AwooUtils.getChatAdmins(groupId):
             bot.sendMessage(i, "[ADM] A Group Name has been changed by " + offendingUsername + ". New name: " + offendingTitle)
 
+def parsePokemon(source):
+    parsedPokemon = {}
+    s = json.load(urllib2.urlopen(source))
+    pokemonList = s["pokemons"]
+
+    for i in pokemonList:
+        id = i['pokemon_id']
+        lat = i['latitude']
+        lon = i['longitude']
+        enc_id = i['encounter_id']
+        despawn = datetime.fromtimestamp(i['disappear_time'] / 1000).strftime('%H:%M:%S')
+
+        if (enc_id not in pokemonWatchdogSeen):
+            parsedPokemon[id] = parsedPokemon.get(id, [])
+            parsedPokemon[id].append({'lat': lat, 'lon': lon, 'despawn': despawn})
+            pokemonWatchdogSeen.append(enc_id)
+
 def pokemonWatchdog():
     global pokemonWatchdogSeen
-    p = prefs
 
-    now = int((datetime.now() - datetime(1970, 1, 1)).total_seconds() * 1000)
-    message = ""
+    now_time = int((datetime.now() - datetime(1970, 1, 1)).total_seconds() * 1000)
 
-    parsedPokemon = {}
+    pokemonBySource = {}
 
-    for chat_id in p.all():
-    
-        source = prefs.get(chat_id, 'pokemonDataSource', None)
-        if source is None:
-            continue
-            
-        source = source + "/raw_data"
-
-        s = json.load(urllib2.urlopen(source))
-        pokemonList = s["pokemons"]
-
-        for i in pokemonList:
-            id = i['pokemon_id']
-            lat = i['latitude']
-            lon = i['longitude']
-            enc_id = i['encounter_id']
-            despawn = datetime.fromtimestamp(i['disappear_time'] / 1000).strftime('%H:%M:%S')
-
-            if (enc_id not in pokemonWatchdogSeen):
-                parsedPokemon[id] = parsedPokemon.get(id, [])
-                parsedPokemon[id].append({'lat': lat, 'lon': lon, 'despawn': despawn})
-                pokemonWatchdogSeen.append(enc_id)
-                
-                
+    for chat_id in prefs.all():
         # Skip the program chats
         if chat_id == "__default" or chat_id == "__private" or chat_id == "__group":
             continue
-            
-        message = ""
-        alertList = p.get(chat_id, 'alertPokemonList')
 
-        if alertList is None:
+        source = prefs.get(chat_id, 'pokemonDataSource')
+        if not source:
             continue
 
-        for i in parsedPokemon.keys():
-            if i in alertList:
-                for j in parsedPokemon[i]:
-                    message += AwooUtils.getPokemonName(i) + " has been spotted! It despawns at " + str(j['despawn']) + \
-                            ". [ᕕ( ᐛ )ᕗ](http://maps.google.com?q=" + str(j['lat']) + "," + str(j['lon']) + ")\n"
+        source += "/raw_data"
 
-        if (chat_id < 0):
-            # Group chat, so we need to handle this
-            now_time = now.time()
-            if now_time >= time(06, 00) and now_time <= time(23, 59):
-                if len(message) != 0:
-                    if (len(message) > 4095):
-                        messages = message.split('\n')
+        alertList = prefs.get(chat_id, 'alertPokemonList')
+        if not alertList:
+            continue
+
+        if source not in pokemonBySource
+            pokemonBySource[source] = parsePokemon(source)
+        parsedPokemon = pokemonBySource[source]
+        message = ""
+
+        for i in set(alertList) & set(parsedPokemon.keys()):
+            for j in parsedPokemon[i]:
+                message += AwooUtils.getPokemonName(i) + \
+                        " has been spotted! It despawns at " + \
+                        str(j['despawn']) + \
+                        ". [ᕕ( ᐛ )ᕗ](http://maps.google.com?q=" + \
+                        str(j['lat']) + "," + str(j['lon']) + ")\n"
+
+        if len(message) != 0 and \
+                # Send message to private chat any time
+                (chat_id >= 0 or \
+                # Don't spam group chat before 6am
+                    (time(06, 00) <= now_time <= time(23, 59))):
+            if len(message) > 4095:
+                messages = message.split('\n')
+                currMsg = ""
+                for m in messages:
+                    if len(currMsg) + len(m) + 1 > 4095:
+                        bot.sendMessage(chat_id, currMsg, "Markdown", True)
                         currMsg = ""
-                        for m in messages:
-                            if len(currMsg) + len(m) + 1 > 4095:
-                                bot.sendMessage(chat_id, currMsg, "Markdown", True)
-                                currMsg = ""
-                            else:
-                                currMsg += m + "\n"
                     else:
-                        bot.sendMessage(chat_id, message, "Markdown", True)
-        else:
-            if len(message) != 0:
-                if (len(message) > 4095):
-                    messages = message.split('\n')
-                    currMsg = ""
-                    for m in messages:
-                        if len(currMsg) + len(m) + 1 > 4095:
-                            bot.sendMessage(chat_id, currMsg, "Markdown", True)
-                            currMsg = ""
-                        else:
-                            currMsg += m + "\n"
-                else:
-                    bot.sendMessage(chat_id, message, "Markdown", True)
+                        currMsg += m + "\n"
+                if currMsg:
+                    bot.sendMessage(chat_id, currMsg, "Markdown", True)
+            else:
+                bot.sendMessage(chat_id, message, "Markdown", True)
 
 def newUserWatchdog(msg, chat_id):
     if msg['new_chat_member']['id'] == AwooUtils.getBotID():
