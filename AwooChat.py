@@ -4,6 +4,7 @@
 import AwooUtils
 import urllib2
 from datetime import datetime, time
+from geopy.distance import distance
 import json
 
 bot = None
@@ -34,6 +35,8 @@ def parsePokemon(source):
     s = json.load(urllib2.urlopen(source))
     pokemonList = s["pokemons"]
 
+    location = prefs.get(chat_id, 'pokemonLocation', None)
+
     for i in pokemonList:
         id = i['pokemon_id']
         lat = i['latitude']
@@ -41,7 +44,10 @@ def parsePokemon(source):
         enc_id = i['encounter_id']
         despawn = datetime.fromtimestamp(i['disappear_time'] / 1000).strftime('%H:%M:%S')
 
-        if (enc_id not in pokemonWatchdogSeen):
+        nearby = location is None or \
+                location['radius'] >= distance((lat, lon), location['pos']).miles
+
+        if (nearby and enc_id not in pokemonWatchdogSeen):
             parsedPokemon[id] = parsedPokemon.get(id, [])
             parsedPokemon[id].append({'lat': lat, 'lon': lon, 'despawn': despawn})
             pokemonWatchdogSeen.append(enc_id)

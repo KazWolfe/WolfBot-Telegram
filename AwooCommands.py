@@ -473,7 +473,7 @@ def watchpkmn(args):
         currentWatch = []
 
     if (len(params) == 0):
-        bot.sendMessage(chat_id, "Command requires one or two arguments: [add|remove|list|source] <pokemon_id>.")
+        bot.sendMessage(chat_id, "Command requires one or two arguments: [add|remove|list|source|location] <pokemon_id>.")
         return None
         
     if (params[0].lower() == "add"):
@@ -489,6 +489,20 @@ def watchpkmn(args):
             bot.sendMessage(chat_id, "Source set to " + params[1])
         else:
             bot.sendMessage(chat_id, "Command requires zero or one argument: /watchpkmn source [url]")
+        return None
+    elif (params[0].lower() == "location"):
+        if len(params) == 1:
+            prefs.set(chat_id, "pokemonLocation", None)
+            bot.sendMessage(chat_id, "Location removed. Chat will receive notifications for all pokemon in source.")
+        elif len(params) == 4:
+            try:
+                prefs.set(chat_id, "pokemonLocation", {
+                    'pos': (float(params[1]), float(params[2])),
+                    'radius': float(params[3])})
+            except ValueError:
+                bot.sendMessage(chat_id, "All arguments to `/watchpkmn location` must be numbers")
+        else:
+            bot.sendMessage(chat_id, "Command requires zero or three arguments: /watchpkmn location [latitude longitude radius]")
         return None
     elif (params[0].lower() == "list"):
         list = []
