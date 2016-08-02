@@ -78,6 +78,8 @@ def pokemonWatchdog():
                     message += AwooUtils.getPokemonName(i) + " has been spotted! It despawns at " + str(j['despawn']) + \
                             ". [ᕕ( ᐛ )ᕗ](http://maps.google.com?q=" + str(j['lat']) + "," + str(j['lon']) + ")\n"
 
+        message = unicode(message, 'utf-8')
+
         if (chat_id < 0):
             # Group chat, so we need to handle this
             now_time = now.time()

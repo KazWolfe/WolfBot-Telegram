@@ -2,3 +2,4 @@ config/prefs.json
 config/core.json
 telepot/
 *.pyc
+.idea/
