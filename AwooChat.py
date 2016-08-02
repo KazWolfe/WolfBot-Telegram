@@ -74,7 +74,7 @@ def pokemonWatchdog():
         if not alertList:
             continue
 
-        if source not in pokemonBySource
+        if source not in pokemonBySource:
             pokemonBySource[source] = parsePokemon(source)
         parsedPokemon = pokemonBySource[source]
         message = ""
@@ -87,11 +87,7 @@ def pokemonWatchdog():
                         ". [ᕕ( ᐛ )ᕗ](http://maps.google.com?q=" + \
                         str(j['lat']) + "," + str(j['lon']) + ")\n"
 
-        if len(message) != 0 and \
-                # Send message to private chat any time
-                (chat_id >= 0 or \
-                # Don't spam group chat before 6am
-                    (time(06, 00) <= now_time <= time(23, 59))):
+        if len(message) != 0 and (chat_id >= 0 or (time(06, 00) <= now_time <= time(23, 59))):
             if len(message) > 4095:
                 messages = message.split('\n')
                 currMsg = ""
