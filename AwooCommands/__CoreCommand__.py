@@ -1,6 +1,7 @@
 import AwooUtils
 
 COMMANDS = AwooUtils.CommandManager()
+PREFS = AwooUtils.getPrefs()
 
 def register(name, helptext, helpargs, permset):
     def wrap(fn):

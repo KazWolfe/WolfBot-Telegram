@@ -1,7 +1,9 @@
 import json
 import shlex
+import sys
 
 bot = None
+prefs = None
 
 class Prefs:
     """
@@ -95,6 +97,11 @@ class CommandManager:
         except KeyError:
             bot.sendMessage(chat_id, "The command /" + commandName + " does not exist.")
 
+        # Make sure the user is a superuser for superuser commands
+        if command["permset"]["superuserNeeded"]:
+            if not isDeveloper(user_id):
+                bot.sendMessage(chat_id, "This command needs to be run by a Superuser.")
+
         # Make sure command can be run in a group
         if (not command["permset"]["groupExec"]) and (chat_type != "private"):
             bot.sendMessage(chat_id, "This command may not be run in groups. Try in a Private Message.");
@@ -114,6 +121,11 @@ class CommandManager:
                     return None
 
         command["function"](bot, args)
+
+    def all(self):
+        return self._commands
+
+
 
 ## STATIC UTILS FOR THIS PROJECT ##
 
@@ -256,7 +268,7 @@ def commandLogger(cmd, args):
         return "Got command " + cmd + " from " + username + "@" + bot.getChat(chat_id)[u'title'] + " (" + user_id + "@" + str(chat_id) + ")\n   >>> /" + cmd + " " + params
 
 def isDeveloper(user_id):
-    if str(user_id) in DEVELOPERS:
+    if str(user_id) in SUPERUSERS:
         return True
 
     return False
@@ -324,6 +336,9 @@ def getSuperusers():
 
 def getApiKey():
     return getCoreConfig()['apikey']
+
+def getPrefs():
+    return prefs
 
 VERSION = getVersion()
 SUPERUSERS = getSuperusers()

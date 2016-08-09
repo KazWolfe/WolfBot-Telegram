@@ -1,4 +1,9 @@
-# Import Command Modules in this file
-# NEVER EVER IMPORT __CoreCommand__
+# Base command packages, DO NOT REMOVE!
+import BaseCommands
+import ModeratorCommands
 
-import CommandStart
+# Builtin commands from AwooCore
+import CommandLinks
+
+# Reference to Custom Command File
+import __plugin__

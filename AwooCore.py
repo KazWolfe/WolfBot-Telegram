@@ -92,6 +92,7 @@ def run_threaded(f):
 
 # Pass required variables over to the modules, and report on completion.
 PREFS = AwooUtils.Prefs()
+AwooUtils.prefs = PREFS
 PREFS.load()
 print 'Loaded Preferences for ' + str(len(PREFS.all())) + ' chats.'
 schedule.every(5).minutes.do(run_threaded, AwooChat.pokemonWatchdog)
