@@ -52,6 +52,7 @@ def handle(msg):
                     COMMANDS.execute(BOT, cmd, args)
 
                 except Exception:
+                    e = sys.exc_info()[0]
                     # Report the fact that the command failed to run, and notify the Developers.
                     BOT.sendMessage(chat_id,
                                     "[Error] Could not run command. The developers have been notified and are being beaten savagely for their mistake.")

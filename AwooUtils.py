@@ -96,24 +96,25 @@ class CommandManager:
             command = self._commands[commandName]
         except KeyError:
             bot.sendMessage(chat_id, "The command /" + commandName + " does not exist.")
+            return None
 
         # Make sure the user is a superuser for superuser commands
-        if command["permset"]["superuserNeeded"]:
+        if command["permset"].get("superuserNeeded", False):
             if not isDeveloper(user_id):
                 bot.sendMessage(chat_id, "This command needs to be run by a Superuser.")
 
         # Make sure command can be run in a group
-        if (not command["permset"]["groupExec"]) and (chat_type != "private"):
+        if (not command["permset"].get("groupExec", False)) and (chat_type != "private"):
             bot.sendMessage(chat_id, "This command may not be run in groups. Try in a Private Message.");
             return None
 
         # Make sure command can be run in a private chat
-        if (not command["permset"]["privateExec"]) and (chat_type == "private"):
+        if (not command["permset"].get("privateExec", False)) and (chat_type == "private"):
             bot.sendMessage(chat_id, "This command may not be run in private chats. Try again in a Group.");
             return None
 
         # Make sure the user is privileged enough to run this command
-        if command["permset"]["adminNeeded"]:
+        if command["permset"].get("adminNeeded", False):
             # Private chats don't have admins, so we can assume they are one.
             if chat_type != "private":
                 if not isTelegramAdmin(user_id, chat_id):
