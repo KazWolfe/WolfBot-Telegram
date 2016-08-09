@@ -4,3 +4,4 @@ telepot/
 *.pyc
 .idea/
 AwooCommands.py.old
+AwooCommands/__plugin__.py
