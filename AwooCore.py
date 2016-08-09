@@ -14,9 +14,11 @@ import sys
 import telepot
 import AwooUtils
 import AwooChat
+import AwooCommands
 
 from AwooUtils import SUPERUSERS
 from AwooUtils import VERSION
+from AwooCommands.__CoreCommand__ import COMMANDS
 
 def handle(msg):
 
@@ -89,8 +91,6 @@ def run_threaded(f):
     t.start();
 
 # Pass required variables over to the modules, and report on completion.
-COMMANDS = AwooUtils.CommandManager()
-print 'Loaded Command Manager'
 PREFS = AwooUtils.Prefs()
 PREFS.load()
 print 'Loaded Preferences for ' + str(len(PREFS.all())) + ' chats.'

@@ -72,7 +72,7 @@ def pokemonWatchdog():
 
         alertList = prefs.get(chat_id, 'alertPokemonList')
         if not alertList:
-            continue
+             continue
 
         if source not in pokemonBySource:
             pokemonBySource[source] = parsePokemon(source)
