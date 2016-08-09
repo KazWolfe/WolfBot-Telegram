@@ -55,7 +55,7 @@ def parsePokemon(source):
 def pokemonWatchdog():
     global pokemonWatchdogSeen
 
-    now_time = int((datetime.now() - datetime(1970, 1, 1)).total_seconds() * 1000).time()
+    now_time = int((datetime.now() - datetime(1970, 1, 1)).total_seconds() * 1000)
 
     pokemonBySource = {}
 

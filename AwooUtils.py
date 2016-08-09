@@ -1,10 +1,11 @@
+from AwooCore import VERSION
+from AwooCore import DEVELOPERS
+from AwooCore import BOT
+
 import json
 import shlex
 
-bot = None
-__VERSION__ = None
-__DEVELOPERS__ = [None]
-prefs = None
+bot = BOT
 
 class Prefs:
     """
@@ -58,7 +59,7 @@ class Prefs:
         """
         Load preferences from the file.
         """
-        with open('config/prefs.json', 'r') as f:
+        with open('config/PREFS.json', 'r') as f:
             try:
                 self._prefs = json.loads(f.read())
             except ValueError:
@@ -68,13 +69,57 @@ class Prefs:
         """
         Save preferences from the file.
         """
-        with open('config/prefs.json', 'w') as f:
+        with open('config/PREFS.json', 'w') as f:
             f.write(json.dumps(self._prefs, sort_keys=True))
 
     def all(self):
         return self._prefs
 
-## Generic Utils
+class CommandManager:
+    def __init__(self):
+        self._commands = {}
+
+    def register(self, function, commandName, helptext, helpargs, permset):
+        self._commands[commandName] = {"function": function, "helptext": helptext, "helpargs": helpargs, "permset": permset}
+
+    def deregister(self, commandName):
+        del self._commands[commandName]
+
+    def gethelp(self):
+        return None
+        # ToDo: Real help!
+
+    def execute(self, bot, commandName, args):
+        chat_type = args['chat_type']
+        chat_id = args['chat_id']
+        user_id = args['user_id']
+
+        try:
+            command = self._commands[commandName]
+        except KeyError:
+            bot.sendMessage(chat_id, "The command /" + commandName + " does not exist.")
+
+        # Make sure command can be run in a group
+        if (not command["permset"]["groupExec"]) and (chat_type != "private"):
+            bot.sendMessage(chat_id, "This command may not be run in groups. Try in a Private Message.");
+            return None
+
+        # Make sure command can be run in a private chat
+        if (not command["permset"]["privateExec"]) and (chat_type == "private"):
+            bot.sendMessage(chat_id, "This command may not be run in private chats. Try again in a Group.");
+            return None
+
+        # Make sure the user is privileged enough to run this command
+        if command["permset"]["adminNeeded"]:
+            # Private chats don't have admins, so we can assume they are one.
+            if chat_type != "private":
+                if not isTelegramAdmin(user_id, chat_id):
+                    bot.sendMessage(chat_id, "This command may only be run by a chat admin.")
+                    return None
+
+        command["function"](bot, args)
+
+## STATIC UTILS FOR THIS PROJECT ##
 
 def isCommand(msg):
     if 'text' in msg:
@@ -97,7 +142,6 @@ def parseCommand(cmd):
 
     txt_split = cmd.split()
     return txt_split[0].split("@")[0].replace("/", "", 1), newSplit(" ".join(txt_split[1:]))
-
 
 def getUserID(msg):
     if 'from' in msg:
@@ -216,7 +260,7 @@ def commandLogger(cmd, args):
         return "Got command " + cmd + " from " + username + "@" + bot.getChat(chat_id)[u'title'] + " (" + user_id + "@" + str(chat_id) + ")\n   >>> /" + cmd + " " + params
 
 def isDeveloper(user_id):
-    if str(user_id) in __DEVELOPERS__:
+    if str(user_id) in DEVELOPERS:
         return True
 
     return False

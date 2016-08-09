@@ -10,9 +10,9 @@ import json
 
 from telepot.exception import TelegramError
 
-bot = None
-__VERSION__ = None
-prefs = None
+from AwooCore import __BOT__
+from AwooCore import __VERSION__
+from AwooCore import __DEVELOPERS__
 
 def __adminCommand(f):
     # The Decorator for administrative commands.
@@ -458,9 +458,8 @@ def ping(args):
 
     bot.sendMessage(chat_id, "Pong!")
 
-
-@__adminCommand
 @__restrictedCommand
+@__adminCommand
 def watchpkmn(args):
     chat_id = args['chat_id']
     params = args['params']
