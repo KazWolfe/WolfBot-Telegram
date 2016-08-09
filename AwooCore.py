@@ -15,6 +15,9 @@ import telepot
 import AwooUtils
 import AwooChat
 
+from AwooUtils import SUPERUSERS
+from AwooUtils import VERSION
+
 def handle(msg):
 
     print("Got message: " + str(msg))
@@ -50,7 +53,7 @@ def handle(msg):
                     # Report the fact that the command failed to run, and notify the Developers.
                     BOT.sendMessage(chat_id,
                                     "[Error] Could not run command. The developers have been notified and are being beaten savagely for their mistake.")
-                    for i in DEVELOPERS:
+                    for i in SUPERUSERS:
                         BOT.sendMessage(i,
                                         r"\[DEV] Internal Error. Trace:\n\n```" + traceback.format_exc(e) + "```",
                                         "Markdown")
@@ -64,7 +67,7 @@ def handle(msg):
         elif content_type == 'left_chat_member':
             if msg['left_chat_participant']['id'] == AwooUtils.getBotID():
                 # Debug
-                for i in DEVELOPERS:
+                for i in SUPERUSERS:
                     BOT.sendMessage(i, "WolfBot was kicked from chat " + str(msg['chat']['title']))
                 PREFS.purgeChat(msg['chat']['id'])
 
@@ -76,29 +79,16 @@ def handle(msg):
 ##### END DEFINITIONS #####
 ### Below this is the actual program. Chatbots are teeny!
 
-# Get Core Config
-with open('config/core.json', 'r') as f:
-    try:
-        coreconfig = json.loads(f.read())
-    except ValueError:
-        print "config/core.json not found or incorrect! Please set it up and try again!"
-        sys.exit()
-
-# Define Literal Globals
-APIKEY = coreconfig['apikey']
-DEVELOPERS = coreconfig['superusers']
-VERSION = coreconfig['version']
-
 # Create the Chatbot instance.
-BOT = telepot.Bot(APIKEY)
+BOT = telepot.Bot(AwooUtils.getApiKey())
+AwooUtils.bot = BOT
 
 # Prepare a thread handler
 def run_threaded(f):
     t = threading.Thread(target=f)
     t.start();
-    
+
 # Pass required variables over to the modules, and report on completion.
-print str(dir(AwooUtils))
 COMMANDS = AwooUtils.CommandManager()
 print 'Loaded Command Manager'
 PREFS = AwooUtils.Prefs()
@@ -107,7 +97,6 @@ print 'Loaded Preferences for ' + str(len(PREFS.all())) + ' chats.'
 schedule.every(5).minutes.do(run_threaded, AwooChat.pokemonWatchdog)
 print 'Loaded module AwooChat'
 
-# Load and initialize all the commands
 
 # Actually handle the message listener.
 BOT.message_loop(handle)

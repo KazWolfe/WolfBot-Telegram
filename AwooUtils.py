@@ -1,11 +1,7 @@
-from AwooCore import VERSION
-from AwooCore import DEVELOPERS
-from AwooCore import BOT
-
 import json
 import shlex
 
-bot = BOT
+bot = None
 
 class Prefs:
     """
@@ -59,7 +55,7 @@ class Prefs:
         """
         Load preferences from the file.
         """
-        with open('config/PREFS.json', 'r') as f:
+        with open('config/prefs.json', 'r') as f:
             try:
                 self._prefs = json.loads(f.read())
             except ValueError:
@@ -69,7 +65,7 @@ class Prefs:
         """
         Save preferences from the file.
         """
-        with open('config/PREFS.json', 'w') as f:
+        with open('config/prefs.json', 'w') as f:
             f.write(json.dumps(self._prefs, sort_keys=True))
 
     def all(self):
@@ -309,3 +305,25 @@ def getPokemonId(name):
         return pokemon.index(name) + 1
     except ValueError:
         return 0
+
+def getCoreConfig():
+    with open('config/core.json', 'r') as f:
+        try:
+            coreconfig = json.loads(f.read())
+        except ValueError:
+            print "config/core.json not found or incorrect! Please set it up and try again!"
+            sys.exit()
+
+    return coreconfig
+
+def getVersion():
+    return getCoreConfig()['version']
+
+def getSuperusers():
+    return getCoreConfig()['superusers']
+
+def getApiKey():
+    return getCoreConfig()['apikey']
+
+VERSION = getVersion()
+SUPERUSERS = getSuperusers()
