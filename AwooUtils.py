@@ -1,9 +1,8 @@
 import json
 import shlex
+import sys
 
 bot = None
-__VERSION__ = None
-__DEVELOPERS__ = [None]
 prefs = None
 
 class Prefs:
@@ -74,7 +73,62 @@ class Prefs:
     def all(self):
         return self._prefs
 
-## Generic Utils
+class CommandManager:
+    def __init__(self):
+        self._commands = {}
+
+    def register(self, function, commandName, helptext, helpargs, permset):
+        self._commands[commandName] = {"function": function, "helptext": helptext, "helpargs": helpargs, "permset": permset}
+
+    def deregister(self, commandName):
+        del self._commands[commandName]
+
+    def gethelp(self):
+        return None
+        # ToDo: Real help!
+
+    def execute(self, bot, commandName, args):
+        chat_type = args['chat_type']
+        chat_id = args['chat_id']
+        user_id = args['user_id']
+
+        try:
+            command = self._commands[commandName]
+        except KeyError:
+            bot.sendMessage(chat_id, "The command /" + commandName + " does not exist.")
+            return None
+
+        # Make sure the user is a superuser for superuser commands
+        if command["permset"].get("superuserNeeded", False):
+            if not isDeveloper(user_id):
+                bot.sendMessage(chat_id, "This command needs to be run by a Superuser.")
+
+        # Make sure command can be run in a group
+        if (not command["permset"].get("groupExec", False)) and (chat_type != "private"):
+            bot.sendMessage(chat_id, "This command may not be run in groups. Try in a Private Message.");
+            return None
+
+        # Make sure command can be run in a private chat
+        if (not command["permset"].get("privateExec", False)) and (chat_type == "private"):
+            bot.sendMessage(chat_id, "This command may not be run in private chats. Try again in a Group.");
+            return None
+
+        # Make sure the user is privileged enough to run this command
+        if command["permset"].get("adminNeeded", False):
+            # Private chats don't have admins, so we can assume they are one.
+            if chat_type != "private":
+                if not isTelegramAdmin(user_id, chat_id):
+                    bot.sendMessage(chat_id, "This command may only be run by a chat admin.")
+                    return None
+
+        command["function"](bot, args)
+
+    def all(self):
+        return self._commands
+
+
+
+## STATIC UTILS FOR THIS PROJECT ##
 
 def isCommand(msg):
     if 'text' in msg:
@@ -97,7 +151,6 @@ def parseCommand(cmd):
 
     txt_split = cmd.split()
     return txt_split[0].split("@")[0].replace("/", "", 1), newSplit(" ".join(txt_split[1:]))
-
 
 def getUserID(msg):
     if 'from' in msg:
@@ -216,7 +269,7 @@ def commandLogger(cmd, args):
         return "Got command " + cmd + " from " + username + "@" + bot.getChat(chat_id)[u'title'] + " (" + user_id + "@" + str(chat_id) + ")\n   >>> /" + cmd + " " + params
 
 def isDeveloper(user_id):
-    if str(user_id) in __DEVELOPERS__:
+    if str(user_id) in SUPERUSERS:
         return True
 
     return False
@@ -265,3 +318,28 @@ def getPokemonId(name):
         return pokemon.index(name) + 1
     except ValueError:
         return 0
+
+def getCoreConfig():
+    with open('config/core.json', 'r') as f:
+        try:
+            coreconfig = json.loads(f.read())
+        except ValueError:
+            print "config/core.json not found or incorrect! Please set it up and try again!"
+            sys.exit()
+
+    return coreconfig
+
+def getVersion():
+    return getCoreConfig()['version']
+
+def getSuperusers():
+    return getCoreConfig()['superusers']
+
+def getApiKey():
+    return getCoreConfig()['apikey']
+
+def getPrefs():
+    return prefs
+
+VERSION = getVersion()
+SUPERUSERS = getSuperusers()

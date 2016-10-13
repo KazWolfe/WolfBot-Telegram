@@ -3,3 +3,4 @@ config/core.json
 telepot/
 *.pyc
 .idea/
+AwooCommands.py.old
